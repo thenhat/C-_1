@@ -3,96 +3,74 @@ using System.Collections.Generic;
 
 namespace T1809E_C
 {
+    public delegate void Notification(string s);
     public class Cart
     {
         public int id;
         public string customer;
-        public double grandTotal;
+        public decimal grandTotal;
+        public List<Product> productList;
         public string city;
         public string country;
-        List<Product> productList =new List<Product>();
 
-        public Cart()
+        private event Notification NotifyWhenAddProduct;
+
+        public static void ShowNotification(string s)
         {
-            id = Convert.ToInt32(Console.ReadLine());
-            customer = Console.ReadLine();
-            city = Console.ReadLine();
-            country = Console.ReadLine();
+            Console.WriteLine(s);
+        }
+        
+        public bool AddProduct(Product p)
+        {
+            if (!productList.Contains(p) && p.CheckQty())
+            {    
+                productList.Add(p);
+                p.qty--;
+                grandTotal += p.price;
+                if (NotifyWhenAddProduct == null)
+                {
+                    NotifyWhenAddProduct += ShowNotification;
+                }
+                NotifyWhenAddProduct("San pham da duoc them vao gio hang");
+                return true;
+            }
+            Console.WriteLine("san pham da co trong gio hang");
+            return false;
         }
 
-        public void addProduct()
+        public bool RemoveProduct(Product p)
         {
-            Console.WriteLine("-----------------");
-            Console.WriteLine("Them hang");
-            productList.Add(new Product());
-            
-            Console.WriteLine("-----------------");
-            Console.WriteLine("ban muon them san pham nua(Y/N):");
-            string check = Console.ReadLine();
-            if (check == "y" || check == "Y")
+            if (productList.Contains(p))
             {
-                addProduct();
+                productList.Remove(p);
+                p.qty++;
+                grandTotal -= p.price;
+                return true;
             }
-            else
-            {
-                Console.WriteLine("-----------------");
-                Console.WriteLine("List Product");
-
-            
-                foreach (var x in productList)
-                {
-                    x.getInfo();
-                    Console.WriteLine("-------------------");
-                } 
-            }
+            Console.WriteLine("san pham khong co trong gio hang");
+            return false;
         }
 
-        public void deleteProduct()
+        public decimal GetGrandTotal()
         {
-            foreach (var x in productList)
+            decimal finalTotal;
+            if (country == "VN")
             {
-                x.getInfo();
-                Console.WriteLine("-------------------");
-            } 
-            
-            Console.WriteLine("Ban muon xoa san pham thu may:");
-            int s = Convert.ToInt32(Console.ReadLine());
-            if (s > productList.Count)
-            {
-                Console.WriteLine("Nhap lai");
-                deleteProduct();
-            }
-            else
-            {
-                productList.RemoveAt(s);
-                foreach (var x in productList)
+                if (city == "HN" || city == "HCM")
                 {
-                    x.getInfo();
-                    Double Total = x.qty * x.price;
-                    grandTotal += Total;
-                    Console.WriteLine("-------------------");
-                } 
-            }
-        }
-       public void getGrandTotal()
-        {
-            if (country == "vietnam" || country == "Việt Nam" || country =="Viet Nam")
-            {
-                if (city == "HN" || city == "hanoi" || city == "Hà Nội" || city == "HCM" || city == "hcm" ||
-                    city == "Hồ Chí Minh")
-                {
-                    grandTotal = grandTotal + grandTotal * 0.01;
+                    finalTotal = grandTotal * (decimal)1.01;
                 }
                 else
                 {
-                    grandTotal = grandTotal + grandTotal * 0.02;
+                    finalTotal = grandTotal * (decimal)1.02;
                 }
-            }else
-            {
-                grandTotal = grandTotal + grandTotal * 0.05;
             }
-            
-            Console.WriteLine("Tong tien la: " +grandTotal);
+            else
+            {
+                finalTotal = grandTotal * (decimal)1.05;
+            }
+
+            return finalTotal;
         }
     }
 }
